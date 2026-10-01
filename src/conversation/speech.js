@@ -3,7 +3,7 @@ import { AudioLipSync } from '../lipsync/AudioLipSync.js';
 
 /**
  * Tous les moteurs de synthèse vocale (TTS) exposent la même interface :
- *   await tts.speak(text, rig)  → anime `rig` (LudoRig) pendant la lecture
+ *   await tts.speak(text, rig)  → anime `rig` (LudoSprite) pendant la lecture
  *   tts.stop()
  */
 

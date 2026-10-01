@@ -1,52 +1,47 @@
-import { LudoAvatar } from './LudoAvatar.js';
+import { LudoSprite } from './LudoSprite.js';
 
 /**
- * Composant web : <ludo-avatar lang="fr-FR" framing="bust" expression="happy"></ludo-avatar>
+ * Composant web : <ludo-sprite lang="fr-FR" expression="happy" style="height:400px"></ludo-sprite>
  *
- * Attributs : lang, framing (bust|face|full), background, expression, state, no-outlines.
+ * Attributs : lang, expression, state, src (image du sprite).
  * Méthodes : speak(text), playAudio(input), setExpression(name), setState(state), stopSpeaking().
- * Propriété : avatar (instance LudoAvatar), rig (LudoRig).
+ * Propriété : ludo (instance LudoSprite).
  */
-export class LudoAvatarElement extends HTMLElement {
-  static observedAttributes = ['expression', 'state', 'framing'];
+export class LudoSpriteElement extends HTMLElement {
+  static observedAttributes = ['expression', 'state'];
 
   connectedCallback() {
-    if (this.avatar) return;
+    if (this.ludo) return;
     if (!this.style.display) this.style.display = 'block';
-    if (!this.style.height && !this.getAttribute('style')?.includes('height')) this.style.height = '400px';
-    this.avatar = new LudoAvatar(this, {
-      lang: this.getAttribute('lang') || 'fr-FR',
-      framing: this.getAttribute('framing') || 'bust',
-      background: this.getAttribute('background'),
-      outlines: !this.hasAttribute('no-outlines'),
-    });
-    this.rig = this.avatar.rig;
-    for (const a of LudoAvatarElement.observedAttributes) {
+    if (!this.style.height) this.style.height = '400px';
+    const opts = { lang: this.getAttribute('lang') || 'fr-FR' };
+    if (this.hasAttribute('src')) opts.src = this.getAttribute('src');
+    this.ludo = new LudoSprite(this, opts);
+    for (const a of LudoSpriteElement.observedAttributes) {
       if (this.hasAttribute(a)) this.attributeChangedCallback(a, null, this.getAttribute(a));
     }
-    this.rig.addEventListener('state', (e) => this.dispatchEvent(new CustomEvent('ludo-state', { detail: e.detail })));
-    this.dispatchEvent(new CustomEvent('ludo-ready', { detail: { avatar: this.avatar } }));
+    this.ludo.addEventListener('state', (e) => this.dispatchEvent(new CustomEvent('ludo-state', { detail: e.detail })));
+    this.ludo.ready.then(() => this.dispatchEvent(new CustomEvent('ludo-ready', { detail: { ludo: this.ludo } })));
   }
 
   disconnectedCallback() {
-    this.avatar?.dispose();
-    this.avatar = null;
+    this.ludo?.dispose();
+    this.ludo = null;
   }
 
   attributeChangedCallback(name, _old, value) {
-    if (!this.avatar || value == null) return;
-    if (name === 'expression') this.avatar.setExpression(value);
-    if (name === 'state') this.avatar.setState(value);
-    if (name === 'framing') this.avatar.setFraming(value);
+    if (!this.ludo || value == null) return;
+    if (name === 'expression') this.ludo.setExpression(value);
+    if (name === 'state') this.ludo.setState(value);
   }
 
-  speak(text) { return this.avatar.speak(text); }
-  playAudio(input, opts) { return this.avatar.playAudio(input, opts); }
-  setExpression(name, opts) { this.avatar.setExpression(name, opts); }
-  setState(state) { this.avatar.setState(state); }
-  stopSpeaking() { this.avatar.stopSpeaking(); }
+  speak(text) { return this.ludo.speak(text); }
+  playAudio(input, opts) { return this.ludo.playAudio(input, opts); }
+  setExpression(name, opts) { this.ludo.setExpression(name, opts); }
+  setState(state) { this.ludo.setState(state); }
+  stopSpeaking() { this.ludo.stopSpeaking(); }
 }
 
-if (typeof customElements !== 'undefined' && !customElements.get('ludo-avatar')) {
-  customElements.define('ludo-avatar', LudoAvatarElement);
+if (typeof customElements !== 'undefined' && !customElements.get('ludo-sprite')) {
+  customElements.define('ludo-sprite', LudoSpriteElement);
 }

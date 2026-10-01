@@ -1,10 +1,10 @@
 import {
-  LudoAvatar, BrowserTTS, BrowserSTT, LudoConversation, EXPRESSIONS, STATES, VISEMES, exportLudoGLB,
+  LudoSprite, BrowserTTS, BrowserSTT, LudoConversation, EXPRESSIONS, STATES, VISEMES,
 } from '../src/index.js';
 
 const $ = (id) => document.getElementById(id);
-const avatar = new LudoAvatar($('ludo'), { lang: 'fr-FR' });
-const { rig } = avatar;
+const avatar = new LudoSprite($('ludo'), { lang: 'fr-FR' });
+const rig = avatar;
 window.ludo = avatar; // pratique depuis la console : ludo.speak('Bonjour')
 
 rig.addEventListener('state', (e) => { $('status').textContent = e.detail.state; });
@@ -123,11 +123,4 @@ const download = (href, name) => {
   a.download = name;
   a.click();
 };
-$('glb').onclick = async () => {
-  const glb = await exportLudoGLB();
-  const url = URL.createObjectURL(new Blob([glb], { type: 'model/gltf-binary' }));
-  download(url, 'ludo.glb');
-  setTimeout(() => URL.revokeObjectURL(url), 5000);
-};
 $('png').onclick = () => download(avatar.snapshot(), 'ludo.png');
-$('framing').onchange = () => avatar.setFraming($('framing').value);

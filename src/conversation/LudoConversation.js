@@ -1,4 +1,4 @@
-import { EXPRESSIONS } from '../avatar/LudoRig.js';
+import { EXPRESSIONS } from '../sprite/frames.js';
 
 /**
  * Extrait les balises d'expression d'une réponse, ex. "[happy] Salut !".
@@ -28,7 +28,7 @@ export function parseExpressionTags(reply) {
  * Boucle de conversation : écoute (STT) → réflexion (votre logique / LLM) → parole (TTS).
  *
  *   const convo = new LudoConversation({
- *     rig: avatar.rig,
+ *     rig: ludo,               // instance LudoSprite
  *     stt: new BrowserSTT({ lang: 'fr-FR' }),
  *     tts: new BrowserTTS({ lang: 'fr-FR' }),
  *     respond: async (text, history) => (await fetch('/api/ludo', {...})).text(),
