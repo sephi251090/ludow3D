@@ -17,6 +17,7 @@ npm run dev          # démo sur http://localhost:5173
 npm test             # tests unitaires (Node)
 npm run build        # démo statique → dist-demo/
 npm run build:lib    # bibliothèque ESM autonome → dist/ludo.js (image incluse)
+npm run build:artifact  # page HTML unique à héberger n'importe où → artifact/dist/ludo.html
 ```
 
 La démo permet de faire parler Ludo (voix du navigateur), de lui parler au micro, de tester

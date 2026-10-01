@@ -3,3 +3,4 @@ dist/
 dist-demo/
 scratch/
 .DS_Store
+artifact/dist/
