@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Ludo 3D</title>
+  <link rel="icon" href="docs/ludo-reference.webp" />
+  <style>
+    :root {
+      --bg: #fbf6ea; --panel: #ffffff; --ink: #3a2e17; --muted: #7a6a48;
+      --accent: #f49600; --accent-ink: #ffffff; --line: #e8dcc0; --chip: #f6ecd4;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #1d1a14; --panel: #2a251c; --ink: #f3e8cf; --muted: #b8a780; --line: #3d3527; --chip: #3a3224; }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sans-serif; background: var(--bg); color: var(--ink); }
+    main { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(320px, 1fr); min-height: 100vh; }
+    #stage { position: relative; min-height: 60vh; }
+    #ludo { position: absolute; inset: 0; }
+    #status { position: absolute; left: 16px; top: 16px; padding: 4px 12px; border-radius: 99px; background: var(--chip); color: var(--muted); font-size: 13px; }
+    aside { padding: 20px; display: flex; flex-direction: column; gap: 14px; background: var(--panel); border-left: 1px solid var(--line); overflow-y: auto; max-height: 100vh; }
+    h1 { margin: 0; font-size: 22px; }
+    h2 { margin: 0 0 8px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+    section { border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+    textarea, input, select { width: 100%; font: inherit; color: inherit; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 8px; }
+    textarea { resize: vertical; min-height: 64px; }
+    .row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 8px; }
+    button { font: inherit; border: 1px solid var(--line); background: var(--chip); color: var(--ink); border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+    button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 600; }
+    button[aria-pressed="true"] { outline: 2px solid var(--accent); }
+    button:disabled { opacity: .5; cursor: not-allowed; }
+    #log { font-size: 13px; max-height: 160px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+    #log .u { color: var(--muted); }
+    small { color: var(--muted); }
+    label { font-size: 13px; color: var(--muted); }
+    @media (max-width: 800px) { main { grid-template-columns: 1fr; } aside { border-left: 0; max-height: none; } }
+  </style>
+</head>
+<body>
+  <main>
+    <div id="stage">
+      <div id="ludo"></div>
+      <div id="status">idle</div>
+    </div>
+    <aside>
+      <h1>Ludo 3D</h1>
+
+      <section>
+        <h2>Faire parler Ludo</h2>
+        <textarea id="text">[happy] Salut, moi c'est Ludo ! [smug] Je suis la mascotte, et maintenant je parle en 3D.</textarea>
+        <div class="row">
+          <button class="primary" id="speak">Parler</button>
+          <button id="stop">Stop</button>
+          <select id="voice" style="flex:1"><option value="">Voix automatique</option></select>
+        </div>
+        <small>Balises d'humeur : [happy] [sad] [surprised] [angry] [thinking] [wink] [smug] [neutral]</small>
+      </section>
+
+      <section>
+        <h2>Conversation (speech-to-text)</h2>
+        <label for="mode">Réponse de Ludo</label>
+        <select id="mode">
+          <option value="echo">Écho (répète ce que vous dites)</option>
+          <option value="http">Endpoint HTTP (votre backend / LLM)</option>
+        </select>
+        <input id="endpoint" placeholder="https://mon-serveur/api/ludo" style="margin-top:8px; display:none" />
+        <div class="row">
+          <button class="primary" id="mic">🎤 Parler à Ludo</button>
+          <button id="loop" aria-pressed="false">Mode continu</button>
+        </div>
+        <div id="log"></div>
+      </section>
+
+      <section>
+        <h2>Expressions</h2>
+        <div class="row" id="expressions"></div>
+        <h2 style="margin-top:12px">États</h2>
+        <div class="row" id="states"></div>
+      </section>
+
+      <section>
+        <h2>Lip-sync audio</h2>
+        <label for="audio">Fichier audio (voix TTS, enregistrement…)</label>
+        <input type="file" id="audio" accept="audio/*" />
+        <div class="row">
+          <button id="micsync" aria-pressed="false">Micro → bouche</button>
+        </div>
+        <h2 style="margin-top:12px">Visèmes</h2>
+        <div class="row" id="visemes"></div>
+      </section>
+
+      <section>
+        <h2>Export</h2>
+        <div class="row">
+          <button id="glb">Télécharger ludo.glb</button>
+          <button id="png">Capture PNG</button>
+          <select id="framing" style="width:auto">
+            <option value="bust">Buste</option><option value="face">Visage</option><option value="full">Large</option>
+          </select>
+        </div>
+      </section>
+    </aside>
+  </main>
+  <script type="module" src="./demo/main.js"></script>
+</body>
+</html>

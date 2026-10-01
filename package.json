@@ -1,0 +1,41 @@
+{
+  "name": "ludo-3d",
+  "version": "0.1.0",
+  "description": "Ludo, la mascotte 3D parlante (Three.js) : modèle procédural, lip-sync, expressions, STT/TTS.",
+  "main": "src/index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "build:lib": "vite build --config vite.lib.config.js",
+    "export:glb": "node scripts/export-glb.mjs",
+    "preview": "vite preview",
+    "test": "node --test \"test/*.test.js\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/sephi251090/ludow3D.git"
+  },
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/sephi251090/ludow3D/issues"
+  },
+  "homepage": "https://github.com/sephi251090/ludow3D#readme",
+  "dependencies": {
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.56.1",
+    "vite": "^8.3.2"
+  },
+  "type": "module",
+  "module": "src/index.js",
+  "exports": {
+    ".": "./src/index.js",
+    "./element": "./src/element.js"
+  },
+  "files": [
+    "src",
+    "public/ludo.glb"
+  ],
+  "private": true
+}
