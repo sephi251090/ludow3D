@@ -16,6 +16,10 @@ export const FACE_TARGETS = [
 ];
 
 // Paramètres de bouche par visème / expression.
+// Bouche au repos : léger sourire (plus avenant que la ligne plate du sprite).
+const BASE_MOUTH = { smile: 0.35 };
+const mouthParams = (target) => ({ ...BASE_MOUTH, ...(MOUTH[target] ?? {}) });
+
 const MOUTH = {
   viseme_sil: {},
   viseme_PP: { press: 1 },
@@ -34,7 +38,7 @@ const MOUTH = {
   viseme_U: { open: 0.38, round: 1 },
   jawOpen: { open: 1 },
   mouthSmile: { smile: 1, wide: 0.25 },
-  mouthFrown: { frown: 1 },
+  mouthFrown: { smile: 0, frown: 1 },
   mouthPucker: { round: 1, open: 0.08 },
 };
 
@@ -110,9 +114,9 @@ function tonguePart(p) {
 // --- Yeux -------------------------------------------------------------------
 const EYE_X = 0.185;
 const EYE_Y = -0.014;
-const EYE_HW = 0.06;
-const EYE_HH = 0.06;
-const NEUTRAL_LID = 0.3; // paupières mi-closes : le regard blasé du sprite 2D
+const EYE_HW = 0.058;
+const EYE_HH = 0.062;
+const NEUTRAL_LID = 0.12; // paupières à peine baissées : regard doux
 
 function eyeParams(name, side) {
   const p = { lid: NEUTRAL_LID, squint: 0, scale: 1, lx: 0, ly: 0 };
@@ -140,7 +144,7 @@ function eyePart(p, side) {
   const ring = [];
   for (let i = 0; i < RING; i++) {
     const t = (i / RING) * Math.PI * 2;
-    const [x, y] = superEllipse(t, EYE_HW * p.scale, EYE_HH * p.scale, 0.45);
+    const [x, y] = superEllipse(t, EYE_HW * p.scale, EYE_HH * p.scale, 0.75);
     ring.push([cx + x + p.lx, EYE_Y + eyeClamp(p, y + p.ly)]);
   }
   const cy = ring.reduce((s, q) => s + q[1], 0) / RING;
@@ -148,14 +152,14 @@ function eyePart(p, side) {
   return pts;
 }
 
-function highlightPart(p, side) {
-  const cx = side * EYE_X - 0.02 + p.lx * 1.1;
-  const cy = 0.018 + p.ly;
-  const s = 0.011;
+function highlightPart(p, side, small = false) {
+  const cx = side * EYE_X + (small ? 0.02 : -0.018) + p.lx * 1.1;
+  const cy = (small ? -0.025 : 0.016) + p.ly;
+  const s = small ? 0.008 : 0.017;
   const ring = [];
   for (let i = 0; i < 8; i++) {
     const t = (i / 8) * Math.PI * 2 + Math.PI / 8;
-    const [x, y] = superEllipse(t, s, s, 0.3);
+    const [x, y] = superEllipse(t, s, s, 1);
     ring.push([cx + x, EYE_Y + eyeClamp(p, cy + y)]);
   }
   const yc = ring.reduce((a, q) => a + q[1], 0) / 8;
@@ -180,8 +184,17 @@ function browPart(name, side) {
   return [[cx, yc], ...ring];
 }
 
+function blushPart(side) {
+  const ring = [];
+  for (let i = 0; i < RING; i++) {
+    const t = (i / RING) * Math.PI * 2;
+    ring.push([side * 0.3 + 0.06 * Math.cos(t), -0.17 + 0.03 * Math.sin(t)]);
+  }
+  return [[side * 0.3, -0.17], ...ring];
+}
+
 function philtrumPart() {
-  const ring = [[-0.006, MOUTH_Y], [0.006, MOUTH_Y], [0.006, -0.168], [-0.006, -0.168]];
+  const ring = [[-0.0045, MOUTH_Y], [0.0045, MOUTH_Y], [0.0045, -0.168], [-0.0045, -0.168]];
   return [[0, (-0.168 + MOUTH_Y) / 2], ...ring];
 }
 
@@ -190,26 +203,28 @@ function faceParts() {
   const parts = [];
   parts.push({
     material: 'mouth', lift: 0.004, indices: fanIndices(RING),
-    shape: (target) => mouthPart(MOUTH[target] ?? {}),
+    shape: (target) => mouthPart(mouthParams(target)),
   });
   parts.push({
     material: 'teeth', lift: 0.006, indices: stripIndices(BAND),
-    shape: (target) => teethPart(MOUTH[target] ?? {}),
+    shape: (target) => teethPart(mouthParams(target)),
   });
   parts.push({
     material: 'tongue', lift: 0.0055, indices: stripIndices(BAND),
-    shape: (target) => tonguePart(MOUTH[target] ?? {}),
+    shape: (target) => tonguePart(mouthParams(target)),
   });
   parts.push({ material: 'mouth', lift: 0.003, indices: fanIndices(4), shape: () => philtrumPart() });
   for (const side of [1, -1]) {
     parts.push({ material: 'eye', lift: 0.004, indices: fanIndices(RING), shape: (t) => eyePart(eyeParams(t, side), side) });
     parts.push({ material: 'eyeHighlight', lift: 0.006, indices: fanIndices(8), shape: (t) => highlightPart(eyeParams(t, side), side) });
+    parts.push({ material: 'eyeHighlight', lift: 0.006, indices: fanIndices(8), shape: (t) => highlightPart(eyeParams(t, side), side, true) });
+    parts.push({ material: 'blush', lift: 0.002, indices: fanIndices(RING), shape: () => blushPart(side) });
     parts.push({ material: 'brow', lift: 0.004, indices: fanIndices(RING), shape: (t) => browPart(t, side) });
   }
   return parts;
 }
 
-export const FACE_MATERIALS = ['mouth', 'tongue', 'teeth', 'eye', 'eyeHighlight', 'brow'];
+export const FACE_MATERIALS = ['blush', 'mouth', 'tongue', 'teeth', 'eye', 'eyeHighlight', 'brow'];
 
 /** Construit la géométrie du visage avec toutes les morph targets (relatives). */
 export function buildFaceGeometry() {

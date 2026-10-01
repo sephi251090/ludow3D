@@ -34,7 +34,7 @@ export function buildLudo({ materials = 'toon', outlines = true } = {}) {
   // ---------------------------------------------------------------- Corps
   const body = new THREE.Group();
   body.name = 'Body';
-  body.position.y = 0.22;
+  body.position.y = 0.3;
   root.add(body);
 
   const torsoProfile = [
@@ -64,17 +64,9 @@ export function buildLudo({ materials = 'toon', outlines = true } = {}) {
   body.add(collar);
   if (outlines) collar.add(makeOutline(collar.geometry, 0.01));
 
-  const neckGeo = new THREE.CylinderGeometry(0.2, 0.215, 0.55, 32, 1, true);
+  const neckGeo = new THREE.CylinderGeometry(0.23, 0.25, 0.55, 32, 1, true);
   neckGeo.translate(0, -0.6, -0.02);
   addMesh(body, neckGeo, mats.fur, 'Neck');
-
-  // Ombre du cou sous le menton (le "V" plus foncé du sprite).
-  const neckShade = new THREE.Mesh(new THREE.CircleGeometry(0.17, 3, Math.PI / 2), mats.furShade);
-  neckShade.name = 'NeckShade';
-  neckShade.scale.set(0.8, 0.6, 1);
-  neckShade.rotation.z = Math.PI;
-  neckShade.position.set(0, -0.735, 0.212);
-  body.add(neckShade);
 
   body.add(buildLogo(mats, torsoZ));
 
@@ -152,7 +144,7 @@ export function buildLudo({ materials = 'toon', outlines = true } = {}) {
 let gradientMap = null;
 function toonGradient() {
   if (gradientMap) return gradientMap;
-  const data = new Uint8Array([110, 110, 110, 255, 200, 200, 200, 255, 255, 255, 255, 255]);
+  const data = new Uint8Array([175, 175, 175, 255, 225, 225, 225, 255, 255, 255, 255, 255]);
   gradientMap = new THREE.DataTexture(data, 3, 1, THREE.RGBAFormat);
   gradientMap.minFilter = gradientMap.magFilter = THREE.NearestFilter;
   gradientMap.needsUpdate = true;
@@ -186,6 +178,7 @@ function createMaterials(kind) {
     lens: new THREE.MeshBasicMaterial({ color: PALETTE.lens, transparent: true, opacity: 0.12, depthWrite: false, name: 'Lens' }),
     hairTie: solid(PALETTE.hairTie, 'HairTie'),
     mouth: flat(PALETTE.mouth, 'Mouth'),
+    blush: flat(PALETTE.blush, 'Blush'),
     tongue: flat(PALETTE.tongue, 'Tongue'),
     teeth: flat(PALETTE.teeth, 'Teeth'),
     eye: flat(PALETTE.eye, 'Eye'),
@@ -222,7 +215,7 @@ function makeOutline(geometry, width) {
 function buildGlasses(mats, outlines) {
   const g = new THREE.Group();
   g.name = 'Glasses';
-  const hw = 0.108, hh = 0.082, t = 0.024;
+  const hw = 0.118, hh = 0.09, t = 0.02;
   const frameShape = new THREE.Shape();
   frameShape.moveTo(-hw, -hh); frameShape.lineTo(hw, -hh); frameShape.lineTo(hw, hh); frameShape.lineTo(-hw, hh);
   frameShape.closePath();
@@ -273,9 +266,9 @@ function buildEar(mats, side, outlines) {
   const lean = side * 0.06;
   const shape = new THREE.Shape();
   shape.moveTo(-0.17, 0);
-  shape.quadraticCurveTo(-0.12, 0.22, lean - 0.01, 0.44);
-  shape.lineTo(lean + 0.01, 0.44);
-  shape.quadraticCurveTo(0.12, 0.22, 0.17, 0);
+  shape.quadraticCurveTo(-0.12, 0.2, lean - 0.035, 0.36);
+  shape.quadraticCurveTo(lean, 0.41, lean + 0.035, 0.36);
+  shape.quadraticCurveTo(0.12, 0.2, 0.17, 0);
   shape.closePath();
   const geo = new THREE.ExtrudeGeometry(shape, {
     depth: 0.05, bevelEnabled: true, bevelThickness: 0.025, bevelSize: 0.02, bevelSegments: 3, curveSegments: 10,
@@ -294,11 +287,11 @@ function buildEar(mats, side, outlines) {
     sh.closePath();
     return new THREE.ShapeGeometry(sh, 8);
   };
-  const mid = new THREE.Mesh(innerShape(1, 0.02, 0.36), mats.furMid);
+  const mid = new THREE.Mesh(innerShape(1, 0.02, 0.31), mats.furMid);
   mid.position.z = 0.051;
   mid.name = 'EarMid';
   pivot.add(mid);
-  const inner = new THREE.Mesh(innerShape(0.62, 0.03, 0.27), mats.furDeep);
+  const inner = new THREE.Mesh(innerShape(0.62, 0.03, 0.23), mats.furDeep);
   inner.position.z = 0.053;
   inner.name = 'EarInner';
   pivot.add(inner);
@@ -314,22 +307,30 @@ function buildHair(mats, outlines) {
   const onHead = (x, y, lift) => headPoint(x, y, lift);
   const surfaceUp = (p) => headNormal(p);
 
-  // Frange : mèches pointues partant du sommet (raie au milieu, comme le sprite).
+  // Calotte : donne du volume aux cheveux (sinon la tête paraît chauve).
+  const capGeo = new THREE.SphereGeometry(1, 48, 24, 0, Math.PI * 2, 0, 1.3);
+  capGeo.rotateX(-0.42);
+  capGeo.scale(HEAD.a * 1.06, HEAD.b * 1.07, HEAD.c * 1.07);
+  capGeo.translate(0, 0.01, -0.01);
+  const cap = new THREE.Mesh(capGeo, mats.fur);
+  cap.name = 'HairCap';
+  hair.add(cap);
+  if (outlines) cap.add(makeOutline(capGeo, 0.012));
+
+  // Frange : mèches arrondies partant du sommet (raie au milieu, comme le sprite).
   const bangs = [
-    { root: [0.0, 0.47], mid: [-0.06, 0.34], tip: [-0.13, 0.16], w: 0.075 },
-    { root: [-0.06, 0.46], mid: [-0.17, 0.33], tip: [-0.3, 0.13], w: 0.085 },
-    { root: [-0.16, 0.44], mid: [-0.3, 0.3], tip: [-0.43, 0.05], w: 0.085 },
-    { root: [-0.27, 0.4], mid: [-0.41, 0.24], tip: [-0.5, -0.02], w: 0.07 },
-    { root: [0.03, 0.47], mid: [0.08, 0.34], tip: [0.11, 0.17], w: 0.07 },
-    { root: [0.08, 0.46], mid: [0.19, 0.33], tip: [0.3, 0.14], w: 0.085 },
-    { root: [0.17, 0.44], mid: [0.31, 0.3], tip: [0.44, 0.05], w: 0.085 },
-    { root: [0.27, 0.4], mid: [0.41, 0.23], tip: [0.5, -0.03], w: 0.07 },
+    { root: [-0.02, 0.44], mid: [-0.08, 0.34], tip: [-0.14, 0.2], w: 0.09 },
+    { root: [-0.1, 0.43], mid: [-0.2, 0.32], tip: [-0.31, 0.17], w: 0.1 },
+    { root: [-0.2, 0.4], mid: [-0.33, 0.27], tip: [-0.44, 0.08], w: 0.095 },
+    { root: [0.02, 0.44], mid: [0.08, 0.34], tip: [0.13, 0.21], w: 0.085 },
+    { root: [0.1, 0.43], mid: [0.2, 0.32], tip: [0.31, 0.17], w: 0.1 },
+    { root: [0.2, 0.4], mid: [0.33, 0.27], tip: [0.44, 0.08], w: 0.095 },
   ];
   bangs.forEach((b, i) => {
-    const pts = [onHead(...b.root, 0.0), onHead(...b.mid, 0.03), onHead(...b.tip, 0.018)];
+    const pts = [onHead(...b.root, 0.05), onHead(...b.mid, 0.05), onHead(...b.tip, 0.025)];
     const geo = strandGeometry(pts, {
-      radius: (t) => b.w * Math.sin(Math.PI * (0.25 + 0.75 * t)) ** 0.8 * (1 - t * 0.15),
-      flat: 0.28, up: surfaceUp, segments: 16, radial: 10,
+      radius: (t) => b.w * Math.sqrt(Math.max(0, 1 - t ** 3)) + 0.012,
+      flat: 0.42, up: surfaceUp, segments: 16, radial: 12,
     });
     const m = new THREE.Mesh(geo, mats.fur);
     m.name = `Bang_${i}`;
@@ -340,14 +341,13 @@ function buildHair(mats, outlines) {
   // Mèches latérales qui encadrent le visage.
   for (const side of [1, -1]) {
     const pts = [
-      new THREE.Vector3(side * 0.45, 0.22, 0.13),
-      new THREE.Vector3(side * 0.52, -0.06, 0.11),
-      new THREE.Vector3(side * 0.51, -0.3, 0.07),
-      new THREE.Vector3(side * 0.45, -0.5, 0.05),
+      new THREE.Vector3(side * 0.47, 0.22, 0.1),
+      new THREE.Vector3(side * 0.54, -0.04, 0.08),
+      new THREE.Vector3(side * 0.52, -0.26, 0.05),
     ];
     const geo = strandGeometry(pts, {
-      radius: (t) => 0.078 * (1 - t) ** 0.6 + 0.004,
-      flat: 0.32, up: () => new THREE.Vector3(side, 0, 0.3), segments: 18, radial: 10,
+      radius: (t) => 0.085 * Math.sqrt(Math.max(0, 1 - t ** 2.5)) + 0.015,
+      flat: 0.5, up: () => new THREE.Vector3(side, 0, 0.3), segments: 18, radial: 12,
     });
     const m = new THREE.Mesh(geo, mats.fur);
     m.name = side > 0 ? 'SideLock_L' : 'SideLock_R';
@@ -363,14 +363,13 @@ function buildHair(mats, outlines) {
   const ptsP = [
     new THREE.Vector3(0, 0, 0),
     new THREE.Vector3(0.14, 0.03, 0),
-    new THREE.Vector3(0.26, -0.15, 0.02),
-    new THREE.Vector3(0.28, -0.5, 0.04),
-    new THREE.Vector3(0.24, -0.8, 0.06),
-    new THREE.Vector3(0.17, -1.02, 0.08),
+    new THREE.Vector3(0.27, -0.14, 0.02),
+    new THREE.Vector3(0.29, -0.42, 0.04),
+    new THREE.Vector3(0.24, -0.66, 0.06),
   ];
   const ponyGeo = strandGeometry(ptsP, {
-    radius: (t) => 0.07 * (1 - t) + 0.13 * Math.sin(Math.PI * Math.min(1, t * 1.2)) ** 0.6 * (1 - t) ** 0.6 + 0.003,
-    flat: 0.75, up: () => new THREE.Vector3(1, 0, 0.4), segments: 40, radial: 14,
+    radius: (t) => (0.07 + 0.085 * Math.sin(Math.PI * t) ** 0.8) * Math.sqrt(Math.max(0, 1 - t ** 4)) + 0.025,
+    flat: 0.85, up: () => new THREE.Vector3(1, 0, 0.4), segments: 40, radial: 16,
   });
   const ponyMesh = new THREE.Mesh(ponyGeo, mats.fur);
   ponyMesh.name = 'Ponytail';

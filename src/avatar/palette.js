@@ -13,6 +13,7 @@ export const PALETTE = {
   brow: 0x756239,
   nose: 0x6e5a35,
   mouth: 0x3b2312,
+  blush: 0xf6b58a,
   tongue: 0xc8695a,
   teeth: 0xfffaf0,
   logoOrange: 0xf49600,
